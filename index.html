@@ -1,0 +1,894 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Protótipo DRE</title>
+<style>
+  body{margin:0;font-family:Tahoma,Verdana,sans-serif;font-size:12px;background:#fff;color:#000}
+  .tabs{display:flex;background:#e6e6e6;border-bottom:1px solid #999}
+  .tab{padding:5px 8px;border-right:1px solid #bbb;cursor:pointer}
+  .tab.ativa{background:#4b4a7a;color:#fff}
+  .barra{display:flex;align-items:center;border-bottom:1px solid #ccc;background:#fff;height:28px}
+  .titulo{background:#4b4a7a;color:#fff;font-weight:bold;font-size:11px;height:100%;display:flex;align-items:center;padding:0 6px;width:232px}
+  .btn{white-space:nowrap;border:none;background:none;padding:2px 6px;font:inherit;cursor:pointer;height:100%}
+  .btn:hover{background:#dde4f0}
+  .btn:disabled{color:#aaa;cursor:default;background:none}
+  .ico{font-size:15px}
+  .btn.svg svg{width:16px;height:16px;vertical-align:middle}
+  .btn.svg:disabled svg{filter:grayscale(1);opacity:.4}
+  .sep{width:1px;height:20px;background:#ccc;margin:0 3px}
+  select{font:inherit;width:72px;margin:0 6px}
+  .dd::after{content:" \25BE";font-size:9px}
+  .menu{position:absolute;background:#fff;border:1px solid #888;box-shadow:2px 2px 4px #0003;z-index:9;display:none}
+  .menu div{padding:4px 18px;cursor:pointer}.menu div:hover{background:#dde4f0}
+  .area-sup table{table-layout:fixed;width:auto}
+  th.desc{width:400px}
+  th.ano{position:relative;text-align:right;width:130px;transition:width .15s}
+  th.ano .num{display:block;font-weight:normal;font-size:10px;color:#777}
+  th.ano .per{cursor:pointer;padding:0 3px;border:1px solid transparent;white-space:nowrap}
+  th.ano .per:hover,th.ano.aberto .per{border-color:#aaa;background:#f4f4fa}
+  .rel-wrap{margin:20px auto;width:210mm}
+  .rel-barra{display:flex;justify-content:space-between;align-items:center;background:#4b4a7a;color:#fff;padding:6px 10px}
+  .rel-barra .fd-btn{height:28px;margin-left:6px;color:#000}
+  .rel-pag{background:#fff;padding:36px 44px;font:12px Arial,sans-serif;color:#000;box-shadow:0 2px 10px rgba(0,0,0,.4)}
+  .rel-pag h1{font-size:15px;text-align:center;margin:0 0 2px}
+  .rel-pag h2{font-size:13px;text-align:center;margin:12px 0 2px}
+  .rel-pag .cen{text-align:center}
+  .rel-pag table{width:100%;border-collapse:collapse;margin-top:12px}
+  .rel-pag th{border:none;border-bottom:1.5px solid #000;text-align:right;padding:3px 4px;background:none}
+  .rel-pag th:first-child{text-align:left}
+  .rel-pag td{padding:2px 4px;border:none}
+  .rel-pag td.n{text-align:right;white-space:nowrap}
+  .rel-pag tr.g td{font-weight:bold;padding-top:6px}
+  .rel-pag tr.t td{font-weight:bold;border-top:1px solid #000}
+  .rel-pag tr.d td:first-child{padding-left:14px}
+  .rel-pag .concl{margin-top:22px;text-align:justify}
+  .rel-pag .ass{display:flex;flex-wrap:wrap;justify-content:space-around;gap:30px;margin-top:50px}
+  .rel-pag .ass div{width:230px;border-top:1px solid #000;text-align:center;padding-top:3px;font-size:11px}
+  .rel-pag .rod{margin-top:30px;display:flex;justify-content:space-between;font-size:10px;color:#555}
+  .rel-pag .rel-tit{text-align:center;font-weight:bold;font-size:13px;margin-bottom:10px}
+  .rel-pag table.rel-dre{width:100%;border-collapse:collapse;margin-top:0;border:1px solid #000}
+  .rel-dre th,.rel-dre td{border:1px solid #000;padding:3px 6px;vertical-align:middle}
+  .rel-dre th.emp{text-align:left;font-weight:normal;width:52%}
+  .rel-dre th.emp .sub{margin-top:6px;font-weight:bold}
+  .rel-dre th.per{text-align:center;font-weight:bold;width:auto}
+  .rel-dre td.n{text-align:right;white-space:nowrap}
+  .rel-dre tr.g td,.rel-dre tr.t td{font-weight:bold}
+  .rel-dre tr.d td:first-child{padding-left:18px}
+  .rel-pag .local{margin-top:26px}
+  .rel-pag .ass{display:flex;justify-content:space-between;gap:30px;margin-top:46px}
+  .rel-pag .ass div{width:240px;border:none;text-align:center;font-size:11px;line-height:1.4}
+  .rel-pag .ass .lin{display:block;border-top:1px solid #000;margin-bottom:3px}
+  /* Fonte e folha do relatório NG (Arial; corpo 8,5pt, título 10pt; A4 retrato) */
+  .rel-wrap .rel-pag{width:210mm;min-height:297mm;box-sizing:border-box;padding:15mm 12mm;font:8.5pt Arial,Helvetica,sans-serif}
+  .rel-pag .rel-tit{font-size:10pt}
+  .rel-pag .ass div{font-size:8.5pt}
+  .rel-pag .rod{font-size:7pt}
+  /* Cabeçalho padrão NG (linhas acima/abaixo, título e empresa em negrito, Pág. à direita) e quadro sem grade */
+  .rel-pag .rel-cab{border-top:1.5px solid #000;border-bottom:1.5px solid #000;text-align:center;padding:8px 0 4px;margin-bottom:10px}
+  .rel-pag .rel-cab .rel-tit{font-size:10pt;margin:0 0 2px}
+  .rel-pag .rel-cab .emp{font-weight:bold;font-size:10pt}
+  .rel-pag .rel-cab .pg{text-align:right;font-size:7pt;min-height:9px;margin-top:2px}
+  .rel-pag table.rel-dre,.rel-dre th,.rel-dre td{border:none!important}
+  .rel-dre thead th{border-bottom:1px solid #000!important}
+  /* Visualizador de relatórios NG: barra de ferramentas, réguas em cm e fundo azul */
+  #modalRel .rel-barra{display:flex;align-items:center;gap:2px;background:#f0f0f0;color:#000;padding:2px 4px;border-bottom:1px solid #ccc;font:12px Tahoma,sans-serif;justify-content:flex-start}
+  #modalRel .rel-barra button{display:flex;align-items:center;gap:4px;background:none;border:1px solid transparent;padding:3px 5px;font:12px Tahoma,sans-serif;cursor:pointer;white-space:nowrap;flex:none;height:auto;margin:0;color:#000}
+  #modalRel .rel-barra button:hover:not(:disabled){border-color:#7da2ce;background:#e3edf9}
+  #modalRel .rel-barra svg{width:16px;height:16px}
+  #modalRel .rel-barra i{width:1px;height:20px;background:#c8c8c8;margin:0 3px}
+  #modalRel .rel-barra select{font:12px Tahoma;width:82px}
+  #modalRel .rel-barra input{font:12px Tahoma;width:60px;border:1px solid #ccc;padding:2px}
+  .rel-regua{height:16px;background:#f0f0f0;border-bottom:1px solid #ccc;position:relative;overflow:hidden;padding-left:18px}
+  .rel-rh{position:relative;height:16px;margin:0 auto;width:210mm;background:repeating-linear-gradient(90deg,transparent 0 18.4px,#555 18.4px 19.4px) 0 11px/100% 3px no-repeat,#fff;font:9px Arial}
+  .rel-rh span{position:absolute;top:1px;transform:translateX(-50%)}
+  .rel-corpo{flex:1;display:flex;overflow:hidden}
+  .rel-rv{width:18px;flex:none;background:#f0f0f0;border-right:1px solid #ccc;position:relative;font:9px Arial;overflow:hidden}
+  .rel-rv span{position:absolute;left:5px}
+  .rel-area{flex:1;overflow:auto;background:#a3c0e8}
+  #modalRel .rel-wrap{margin:0 auto 20px;width:210mm;transform-origin:top center}
+  #modalRel .rel-pag{box-shadow:1px 0 0 #000,3px 0 0 #555;border-left:1px solid #000}
+  @page{size:A4 portrait;margin:15mm 12mm}
+  @media print{body>*:not(#modalRel){display:none!important}#modalRel{position:static!important;display:block!important;background:none}.rel-barra,.rel-regua,.rel-rv{display:none!important}.rel-corpo,.rel-area{display:block;overflow:visible;background:none}.rel-wrap{margin:0;width:auto}.rel-pag{box-shadow:none;padding:0;width:auto;min-height:0}}
+  .fd-comp{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;margin-left:14px}
+  .fd-comp .pc{border:1px solid #4b4a7a;background:#f4f4fa;padding:2px 6px;white-space:nowrap}
+  .fd-comp .pc b{color:#4b4a7a}
+  #popPer{position:fixed;display:none;z-index:30;width:300px;background:#fff;border:1px solid #4b4a7a;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+  #popPer .pp-tit{background:#4b4a7a;color:#fff;font-weight:bold;padding:4px 8px}
+  #popPer .pp-atalhos{padding:8px 8px 2px}
+  #popPer button{font:inherit;cursor:pointer}
+  .pp-tipos{display:flex}
+  .pp-tipos button{flex:1;border:1px solid #4b4a7a;background:#fff;color:#4b4a7a;padding:2px 0;margin-left:-1px}
+  .pp-tipos button.on,.pp-ns button.on{background:#4b4a7a;color:#fff}
+  .pp-sub{display:flex;align-items:flex-start;gap:8px;margin-top:6px;min-height:22px}
+  .pp-ano{display:flex;align-items:center;gap:4px;white-space:nowrap}
+  .pp-ano button{border:none;background:none;color:#4b4a7a;font-size:14px;padding:0 2px}
+  .pp-ns{display:flex;flex-wrap:wrap;gap:2px}
+  .pp-ns button{border:1px solid #bbb;background:#fff;padding:1px 5px}
+  .pp-ns.mes button{width:36px;padding:1px 0}
+  .pp-livre{color:#c58a00;font-style:italic;margin-top:4px}
+  .pp-datas{padding:6px 8px;display:flex;align-items:center;gap:5px}
+  .pp-datas input{font:inherit;width:78px;padding:2px}
+  .pp-erro{color:#c00;padding:0 8px;min-height:14px}
+  .pp-btns{display:flex;justify-content:flex-end;padding:4px 8px 8px}
+  th.ano .rm{position:absolute;left:3px;top:2px;display:none;color:#c00;cursor:pointer;font-weight:bold;padding:0 3px}
+  th.ano:hover .rm{display:inline}
+  th.add{width:52px;white-space:nowrap;text-align:center}
+  th.add button{border:1px dashed #4b4a7a;background:#fff;color:#4b4a7a;font-weight:bold;cursor:pointer;width:20px;height:18px;line-height:14px;padding:0;margin:0 1px}
+  th.add button:hover{background:#4b4a7a;color:#fff}
+  td.novo,th.novo{animation:entra .15s ease-out}
+  @keyframes entra{from{opacity:0}to{opacity:1}}
+  .colunas{display:flex;gap:18px;padding:10px 8px;align-items:center}
+  .colunas{flex-wrap:wrap;row-gap:6px}
+  .colunas label{display:flex;gap:6px;align-items:center;white-space:nowrap}
+  .colunas input{font:inherit;width:56px;padding:2px}
+  .colunas select{font:inherit;width:78px}
+  .colunas label.novo{animation:entra .15s ease-out}
+  .colunas input.desc{width:85px}
+  table{border-collapse:collapse;width:100%}
+  th{text-align:left;border:1px solid #ccc;border-top:none;padding:1px 3px;font-weight:bold;background:#fff}
+  td{border:1px solid #ddd;padding:1px 3px;white-space:nowrap}
+  td.n{text-align:right}td.c{text-align:center}
+  tr.neg td:first-child{font-weight:bold}
+  tr.neg.t td{font-weight:bold}
+  tr.sel td{background:#93aed6}
+  tr.sel td:first-child{outline:1px solid #000;outline-offset:-1px}
+  tbody tr{cursor:pointer}
+  input[type=checkbox]{margin:0;width:13px;height:13px}
+  .area-sup{height:330px;overflow:auto;border-bottom:1px solid #999}
+  .area-inf{height:140px;overflow:auto}
+  .titulo2{width:300px}
+  .sel-conta{display:flex;align-items:center}
+  .sel-conta input{flex:1;font:inherit;border:1px solid #7f9db9;padding:1px 3px;height:16px}
+  .sel-conta button{width:22px;height:20px;border:1px solid #7f9db9;background:#ececec;cursor:pointer;font:inherit;padding:0}
+  .modal-fundo{position:fixed;inset:0;background:#0004;display:none;align-items:center;justify-content:center;z-index:20}
+  .modal{background:#fff;width:640px;height:450px;border:1px solid #4b4a7a;display:flex;flex-direction:column;box-shadow:3px 3px 10px #0005}
+  .modal-barra{display:flex;align-items:center;height:28px;border-bottom:1px solid #ccc}
+  .modal-barra .titulo{width:110px;font-size:12px}
+  .modal-barra .ok{color:#1a4fd6;font-size:17px;font-weight:bold}
+  .modal-barra .x{color:#d61a1a;font-size:17px;font-weight:bold}
+  .busca{display:flex;border:1px solid #888;margin:2px}
+  .busca span{background:#7a7a7a;color:#fff;padding:2px 4px;white-space:nowrap}
+  .busca input{flex:1;border:none;font:inherit;outline:none;padding:2px}
+  .modal-grade{flex:1;overflow-y:scroll}
+  .modal-grade table{width:470px}
+  .modal-grade tr.sint td{font-weight:normal}
+  .modal-grade tr.sel td{background:#fff}
+  .modal-grade tr.sel td:first-child{background:#c8d3e6;font-weight:bold}
+  /* ---- Modal Filtros Demonstração ---- */
+  #modalImp .fd{width:1100px;background:#fff;border:1px solid #4b4a7a;box-shadow:3px 3px 12px #0006;font-size:12px}
+  .fd-tit{background:#4b4a7a;color:#fff;font-weight:bold;padding:6px 8px;display:flex;justify-content:space-between}
+  .fd-tit span.x{cursor:pointer;padding:0 4px}
+  .fd-lin{display:flex;align-items:center;gap:6px;padding:6px 8px}
+  .fd select,.fd input[type=text]{font:inherit;border:1px solid #999;padding:1px 2px;height:20px;box-sizing:border-box}
+  .fd,.fd *{box-sizing:border-box}
+  #modalAviso .fd{background:#fff;border:1px solid #4b4a7a;box-shadow:3px 3px 12px #0006;font-size:12px}
+  #avMsg p{margin:0 0 10px}
+  #modalImp .fd{max-width:calc(100vw - 20px)}
+  .meses{display:flex;border:1px solid #888;padding:3px 4px;gap:0;margin:0 10px 0 14px}
+  .meses span{padding:2px 3px;color:#4b4a7a;cursor:pointer;opacity:.75}
+  .meses span.on{background:#4b4a7a;color:#fff;opacity:1}
+  .meses span.todos{border-left:2px solid #4b4a7a;margin-left:2px;padding-left:5px}
+  .fd fieldset{border:none;border-top:1px solid #ccc;margin:0;padding:4px 10px 8px}
+  .fd legend{font-weight:bold;padding:0 4px 0 0}
+  .fd .caixa{border:1px solid #ddd}
+  .fd label{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+  .fd label.off{color:#aaa}
+  .fd-grade4{display:grid;grid-template-columns:1fr 1fr 1fr 150px;row-gap:4px}
+  .fd-socios{height:120px;border:1px solid #ccc;overflow:auto;margin-top:4px}
+  .fd-socios table{width:auto}
+  .fd-socios th,.fd-socios td{border:1px solid #ddd}
+  .fd-btn{width:72px;height:40px;font:inherit;border:1px solid #888;background:#fff;cursor:pointer;margin-left:8px}
+  .fd-btn.pri{background:#c5cfe0}
+  .fd-btn:hover{background:#dde4f0}
+  .fd-mini{width:40px}
+  .btn-cf{font:inherit;border:1px solid #888;background:#e6e6e6;padding:2px 6px;cursor:pointer}
+  .dica{position:relative;color:#2b5fb4;font-size:14px;cursor:help;margin:0 4px 0 -2px}
+  .dica-txt{display:none;position:absolute;top:22px;right:-60px;width:300px;background:#ffffe1;color:#000;border:1px solid #888;box-shadow:2px 2px 5px #0004;padding:6px 8px;font-size:12px;font-weight:normal;z-index:30;white-space:normal;line-height:1.35}
+  .dica:hover .dica-txt{display:block}
+  .status{position:fixed;bottom:0;left:0;right:0;background:#f2f2f2;border-top:1px solid #ccc;padding:3px 8px;font-size:11px;color:#444}
+</style>
+</head>
+<body>
+<div class="tabs"><div class="tab">Central de lançamentos</div><div class="tab ativa">DRE</div></div>
+
+<div class="barra">
+  <div class="titulo">DRE</div>
+  <button class="btn ico" title="Novo" onclick="novo()">&#128459;</button>
+  <button class="btn ico" title="Salvar" disabled>&#128190;</button>
+  <button class="btn ico" title="Cancelar" disabled>&#128465;&#xFE0E;</button>
+  <button class="btn ico" title="Excluir" onclick="excluir()">&#128465;</button>
+  <button class="btn dd" onclick="abreImpressao()">Imprimir</button>
+  <button class="btn ico" title="Exportar" onclick="msg('Exportar')">&#128228;</button>
+  <span class="sep"></span>
+  <button class="btn ico" title="Atualizar" onclick="msg('Atualizado')">&#10227;</button>
+  <span class="sep"></span>
+  <select id="modelo" style="width:220px" title="Modelo da DRE" onchange="trocaModelo(this.selectedIndex)"><option>DRE - Modelo ITG 1000</option><option>DRE - Modelo NBC TG 1001</option><option>DRE - Modelo NBC TG 1002</option><option>DRE - Modelo Completo (CPC 51)</option></select>
+  <select id="periodicidade" title="Periodicidade das colunas" onchange="trocaPeriodicidade(this.value)"><option value="A">Anual</option><option value="T">Trimestral</option><option value="M">Mensal</option></select>
+  <span class="sep"></span>
+  <button class="btn dd" onclick="abreMenu(event,'mCen')">Cenário/Filial</button><span class="sep"></span>
+  <button class="btn" onclick="sugerirPreenchimento()">Sugerir Preenchimento</button>
+  <span class="dica">&#9432;<span class="dica-txt">Ao clicar em "Sugerir Preenchimento" iremos realizar a vinculação das contas sintéticas de resultado à estrutura da DRE selecionada.<br><br>As contas do grupo <b>5 - Outros</b> não são consideradas na sugestão e devem ser vinculadas manualmente, se necessário.<br><br>Ao final da sugestão orientamos que realize a conferência das informações.</span></span>
+  <span class="sep"></span>
+  <button class="btn" onclick="processar()">Processar</button>
+</div>
+
+
+<div class="colunas" id="barCols"><label>1ª Coluna <select><option>2026</option></select> <input class="desc" value="2026"></label><label>2ª Coluna <select><option>2025</option></select> <input class="desc" value="2025"></label></div>
+<div class="area-sup">
+<table>
+  <thead><tr id="cabAnos"><th class="desc">Descrição</th><th class="ano"><span class="per">2026 ▾</span></th><th class="ano"><span class="per">2025 ▾</span></th><th class="add"><button title="Remover última coluna" onclick="remColuna(cols.length-1)">−</button><button title="Adicionar coluna" onclick="addColuna()">+</button></th></tr></thead>
+  <tbody id="itens"></tbody>
+</table>
+</div>
+
+<div class="barra">
+  <div class="titulo titulo2" id="tituloContas">Contas Contábeis</div>
+  <button class="btn svg" id="cNovo" title="Incluir conta contábil" onclick="novaConta()"><svg viewBox="0 0 16 16"><path d="M3.5 1.5h6l3 3v10h-9z" fill="#fff" stroke="#666"/><path d="M9.5 1.5v3h3" fill="none" stroke="#666"/></svg></button>
+  <button class="btn svg" id="cSalvar" title="Salvar" onclick="salvaContas()"><svg viewBox="0 0 16 16"><path d="M1.5 1.5h11l2 2v11h-13z" fill="#5b2e91" stroke="#3d1d66"/><rect x="4" y="2" width="7" height="4" fill="#fff"/><rect x="3.5" y="9" width="9" height="5.5" fill="#d9cff0"/></svg></button>
+  <button class="btn svg" id="cCancelar" title="Cancelar" onclick="cancelaContas()"><svg viewBox="0 0 16 16"><path d="M3 3l10 10M13 3L3 13" stroke="#d61a1a" stroke-width="2.4" stroke-linecap="round"/></svg></button>
+  <button class="btn svg" id="cExcluir" title="Excluir conta contábil" onclick="excluiConta()"><svg viewBox="0 0 16 16"><path d="M2 4h12" stroke="#444" stroke-width="1.4"/><path d="M6 4V2.5h4V4" fill="none" stroke="#444"/><path d="M3.5 4.5l1 10h7l1-10z" fill="#e8e8e8" stroke="#444"/><path d="M6.5 6.5v6M8 6.5v6M9.5 6.5v6" stroke="#777"/></svg></button>
+  <span class="sep"></span>
+  <button class="btn svg" id="cImprimir" title="Imprimir" onclick="msg('Imprimir contas (simulado)')"><svg viewBox="0 0 16 16"><rect x="1.5" y="6.5" width="13" height="6" rx="1" fill="#e6e6e6" stroke="#555"/><rect x="4.5" y="2.5" width="7" height="4" fill="#fff" stroke="#555"/><rect x="4.5" y="10.5" width="7" height="4" fill="#fff" stroke="#555"/></svg></button>
+  <button class="btn svg" id="cExportar" title="Exportar" onclick="msg('Exportar contas (simulado)')"><svg viewBox="0 0 16 16"><rect x="2.5" y="7.5" width="11" height="7" fill="#2b7bd6" stroke="#1a5aa6"/><path d="M8 11V2M5 5l3-3 3 3" fill="none" stroke="#d63a2b" stroke-width="2"/></svg></button>
+  <span class="sep"></span>
+  <button class="btn svg" id="cAtualizar" title="Atualizar" onclick="renderContas()"><svg viewBox="0 0 16 16"><path d="M13 8a5 5 0 1 1-1.6-3.7" fill="none" stroke="#333" stroke-width="1.6"/><path d="M12.5 1.5v3.5H9" fill="none" stroke="#333" stroke-width="1.6"/></svg></button>
+</div>
+<div class="area-inf">
+  <table><thead><tr><th>Conta Contábil</th></tr></thead><tbody id="contas"></tbody></table>
+</div>
+
+<div id="popPer"></div>
+<div class="modal-fundo" id="modalRel" style="z-index:50;flex-direction:column;align-items:stretch;padding:0;background:#a3c0e8">
+ <div class="rel-barra">
+  <button onclick="window.print()"><svg viewBox="0 0 16 16"><rect x="1.5" y="6.5" width="13" height="6" rx="1" fill="#e6e6e6" stroke="#555"/><rect x="4.5" y="2.5" width="7" height="4" fill="#fff" stroke="#555"/><rect x="4.5" y="10.5" width="7" height="4" fill="#fff" stroke="#555"/></svg><span><u>I</u>mpressão</span></button><i></i>
+  <button title="Copiar"><svg viewBox="0 0 16 16"><rect x="2.5" y="1.5" width="8" height="10" fill="#fff" stroke="#555"/><rect x="5.5" y="4.5" width="8" height="10" fill="#fff" stroke="#555"/></svg></button><i></i>
+  <button title="Localizar"><svg viewBox="0 0 16 16"><circle cx="4.5" cy="10" r="3" fill="#333"/><circle cx="11.5" cy="10" r="3" fill="#333"/><rect x="6" y="5" width="4" height="4" fill="#333"/></svg></button><i></i>
+  <button title="Uma página"><svg viewBox="0 0 16 16"><rect x="3.5" y="1.5" width="9" height="13" fill="#fff" stroke="#555"/><path d="M5.5 5h5M5.5 7h5M5.5 9h5" stroke="#999"/></svg></button>
+  <button title="Várias páginas"><svg viewBox="0 0 16 16"><rect x="1.5" y="1.5" width="13" height="13" fill="#fff" stroke="#333"/><path d="M8 1.5v13M1.5 8h13" stroke="#333"/></svg></button><i></i>
+  <button title="Diminuir zoom" onclick="zoomRel(-10)"><svg viewBox="0 0 16 16"><circle cx="7" cy="7" r="5" fill="#fff" stroke="#333" stroke-width="1.4"/><path d="M4.5 7h5M11 11l3.5 3.5" stroke="#333" stroke-width="1.4"/></svg></button>
+  <button title="Aumentar zoom" onclick="zoomRel(10)"><svg viewBox="0 0 16 16"><circle cx="7" cy="7" r="5" fill="#fff" stroke="#333" stroke-width="1.4"/><path d="M4.5 7h5M7 4.5v5M11 11l3.5 3.5" stroke="#333" stroke-width="1.4"/></svg></button>
+  <select id="relZoom" onchange="zoomRel(0)"><option>50 %</option><option>75 %</option><option selected>100 %</option><option>125 %</option><option>150 %</option><option>200 %</option></select><i></i>
+  <button disabled title="Página anterior"><svg viewBox="0 0 16 16"><path d="M8 2v12M3.5 6.5L8 2l4.5 4.5" fill="none" stroke="#aaa" stroke-width="1.6"/></svg></button>
+  <button disabled title="Próxima página"><svg viewBox="0 0 16 16"><path d="M8 2v12M3.5 9.5L8 14l4.5-4.5" fill="none" stroke="#aaa" stroke-width="1.6"/></svg></button>
+  <input value="1/1" readonly><i></i>
+  <button onclick="msg('Relatórios Personalizados (simulado)')">Relatórios Personalizados</button><i></i>
+  <button onclick="msg('Exportar relatório (simulado)')"><svg viewBox="0 0 16 16"><path d="M1.5 1.5h11l2 2v11h-13z" fill="#2b5fb0" stroke="#1a3d7a"/><rect x="4" y="2" width="7" height="4" fill="#fff"/><rect x="3.5" y="9" width="9" height="5.5" fill="#cfdcf2"/></svg>Exportar</button><i></i>
+  <button onclick="msg('Enviar email (simulado)')"><svg viewBox="0 0 16 16"><rect x="1.5" y="3.5" width="13" height="9" fill="#fff6d0" stroke="#7a6a2a"/><path d="M1.5 3.5l6.5 5 6.5-5" fill="none" stroke="#7a6a2a"/></svg>Enviar email</button><i></i>
+  <button onclick="msg('Editar relatório (simulado)')">Editar</button><i></i>
+  <button onclick="document.getElementById('modalRel').style.display='none'"><svg viewBox="0 0 16 16"><path d="M3 3l10 10M13 3L3 13" stroke="#d61a1a" stroke-width="2.6" stroke-linecap="round"/></svg>Fechar</button>
+ </div>
+ <div class="rel-regua"><div class="rel-rh" id="relRH"><span style="left:55.8px">1</span><span style="left:93.6px">2</span><span style="left:131.4px">3</span><span style="left:169.2px">4</span><span style="left:207.0px">5</span><span style="left:244.8px">6</span><span style="left:282.6px">7</span><span style="left:320.4px">8</span><span style="left:358.2px">9</span><span style="left:396.0px">10</span><span style="left:433.8px">11</span><span style="left:471.6px">12</span><span style="left:509.4px">13</span><span style="left:547.2px">14</span><span style="left:585.0px">15</span><span style="left:622.8px">16</span><span style="left:660.6px">17</span><span style="left:698.4px">18</span><span style="left:736.2px">19</span></div></div>
+ <div class="rel-corpo">
+  <div class="rel-rv" id="relRV"><span style="top:37.8px">1</span><span style="top:75.6px">2</span><span style="top:113.4px">3</span><span style="top:151.2px">4</span><span style="top:189.0px">5</span><span style="top:226.8px">6</span><span style="top:264.6px">7</span><span style="top:302.4px">8</span><span style="top:340.2px">9</span><span style="top:378.0px">10</span><span style="top:415.8px">11</span><span style="top:453.6px">12</span><span style="top:491.4px">13</span><span style="top:529.2px">14</span><span style="top:567.0px">15</span><span style="top:604.8px">16</span><span style="top:642.6px">17</span><span style="top:680.4px">18</span><span style="top:718.2px">19</span><span style="top:756.0px">20</span><span style="top:793.8px">21</span><span style="top:831.6px">22</span><span style="top:869.4px">23</span><span style="top:907.2px">24</span><span style="top:945.0px">25</span><span style="top:982.8px">26</span><span style="top:1020.6px">27</span><span style="top:1058.4px">28</span></div>
+  <div class="rel-area">
+ <div class="rel-wrap" id="relWrap">
+  <div class="rel-pag" id="relConteudo"></div>
+ </div>
+  </div>
+ </div>
+</div>
+<div class="status" id="status">Protótipo visual — não conectado ao ERP.</div>
+
+<div class="modal-fundo" id="modalPlano">
+ <div class="modal">
+  <div class="modal-barra">
+   <div class="titulo">Conta Contábil</div>
+   <button class="btn ok" title="Confirmar" onclick="confirmaConta()">&#10003;</button>
+   <button class="btn x" title="Sair" onclick="fechaPlano()">&#10005;</button>
+  </div>
+  <div class="busca"><span id="buscaRotulo">Buscando em "Reduzido"</span><input id="busca" oninput="filtraPlano()" onkeydown="teclaPlano(event)"></div>
+  <div class="modal-grade">
+   <table><thead><tr><th style="width:80px" onclick="setBusca('red')">Reduzido</th><th style="width:120px" onclick="setBusca('cod')">Código</th><th onclick="setBusca('desc')">Descrição</th></tr></thead><tbody id="plano"></tbody></table>
+  </div>
+ </div>
+</div>
+
+<div class="modal-fundo" id="modalAviso" style="z-index:40">
+ <div class="fd" style="width:460px">
+  <div class="fd-tit"><span id="avTit"></span><span class="x" title="Fechar" onclick="fechaAviso()">x</span></div>
+  <div id="avMsg" style="padding:12px 16px 4px;line-height:1.45"></div>
+  <div id="avBtns" style="display:flex;justify-content:flex-end;padding:8px 12px 12px"></div>
+ </div>
+</div>
+
+<div class="modal-fundo" id="modalImp">
+ <div class="fd">
+  <div class="fd-tit">Filtros Demonstração <span class="x" title="Sair" onclick="fechaImpressao()">x</span></div>
+  <div class="fd-lin" style="display:none">
+   <div style="display:none"><select id="fdModelo" style="display:none" onchange="modeloImp()"></select>
+    <span id="fdPadrao" style="display:flex;align-items:center;gap:6px"><div class="meses" id="fdMeses"></div>Ano <select id="fdAno" style="width:62px" onchange="mudaAnoImp()"></select></span>
+    <span id="fdComp" class="fd-comp" style="display:none;margin-left:0"></span></div>
+   <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+    <div style="display:flex;align-items:center;gap:6px;white-space:nowrap"><span id="fdPerCampos" style="display:none">Período <input type="text" id="fdIni" style="width:82px"> a <input type="text" id="fdFim" style="width:82px"></span>
+     </div>
+   </div>
+  </div>
+  <div style="display:flex;gap:6px;padding:0 8px">
+   <fieldset class="caixa" style="flex:1;border-top:1px solid #ddd"><legend>Sócios</legend>
+    Buscar em "<span style="color:#c58a00">Código</span>" <input type="text" id="fdBusca" style="width:calc(100% - 110px)" oninput="renderSocios()">
+    <div class="fd-socios"><table><thead><tr><th><input type="checkbox" id="fdTodosSocios" onclick="marcaSocios(this.checked)"></th><th style="width:105px">Código</th><th style="width:125px">Nome</th></tr></thead><tbody id="fdSocios"></tbody></table></div>
+   </fieldset>
+   <div style="display:flex;flex-direction:column;gap:6px;padding:14px 4px 0;width:150px;flex-shrink:0">
+    <label style="display:flex;align-items:center;gap:6px">Emissão <input type="text" id="fdEmi" style="width:82px"></label>
+   </div>
+  </div>
+  <fieldset style="margin-top:8px"><legend>Declarar</legend>
+   <div style="display:flex;justify-content:space-between;gap:14px;padding:4px 6px">
+    <label><input type="checkbox"> Informações do Diário <button class="btn-cf" style="padding:0 4px" onclick="msg('Informações do Diário (simulado)')">...</button></label>
+    <label><input type="checkbox"> Inexistência de Conselho Fiscal</label>
+    <label><input type="checkbox"> Informações de Responsabilidade</label>
+    <label><input type="checkbox"> Inexistência de Auditoria Independente</label>
+    <label><input type="checkbox"> Termo Responsabilidade (E152 JUCEMG)</label>
+   </div>
+  </fieldset>
+  <fieldset><legend>Opções de Impressão</legend>
+   <div class="fd-grade4" style="padding:4px 6px">
+    <label><input type="checkbox" id="fdTexto" checked> Imprimir Texto Conclusivo</label>
+    <label><input type="checkbox"> Imprimir Nome da Filial</label>
+    <label><input type="checkbox" id="fdNumReg" onclick="numReg()"> Imprimir Nº de Registro</label>
+    <label><input type="checkbox"> Sugerir Tabulação</label>
+    <label><input type="checkbox" id="fdContador" checked> Imprimir Dados Contador</label>
+    <label>CNPJ / Endereço <select style="width:105px;margin-left:6px"><option>CNPJ</option><option>Endereço</option><option>CNPJ e Endereço</option></select></label>
+    <label class="off" id="fdDataRegLbl"><input type="checkbox" id="fdDataReg" disabled> Imprimir Data Registro</label>
+    <label><input type="checkbox" id="fdZerados" checked> Suprimir Valores Zerados</label>
+    <label><input type="checkbox" id="fdEmpresa" checked> Imprimir Nome da Empresa</label>
+    <label><input type="checkbox"> Imprimir RG do Contador</label>
+    <label><input type="checkbox"> Imprimir Endereço Contador</label>
+   </div>
+  </fieldset>
+  <fieldset style="padding-top:8px">
+   <label><input type="checkbox" id="fdNumPag" checked onclick="numPag()"> Exibir Numeração de Páginas</label>
+   <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:8px">
+    <div style="display:grid;grid-template-columns:auto auto auto auto;gap:6px 6px;align-items:center" id="fdPag">
+     <span>Número da Primeira Página</span><input type="text" class="fd-mini" value="0001">
+     <span style="margin-left:24px">Margem Inferior</span><select style="width:52px"><option>1 cm</option><option selected>2 cm</option><option>3 cm</option></select>
+     <span>Iniciar Numeração na Folha</span><input type="text" class="fd-mini" value="0001"><span></span><span></span>
+    </div>
+    <div><button class="fd-btn pri" onclick="processaImpressao()">Processar</button><button class="fd-btn" onclick="fechaImpressao()">Sair</button></div>
+   </div>
+  </fieldset>
+ </div>
+</div>
+
+<div class="menu" id="mImp"><div>Visualizar</div><div>Imprimir</div><div>Exportar PDF</div></div>
+<div class="menu" id="mOpc"><div>Ocultar itens zerados</div><div>Exibir códigos</div></div>
+<div class="menu" id="mAss"><div>Contador</div><div>Responsável</div></div>
+<div class="menu" id="mCen"><div>Selecionar cenário</div><div>Selecionar filial</div></div>
+
+<script>
+/* Modelos da DRE — G: grupo (negrito, sem valor) | T: total (negrito, com valor) | demais: item detalhe */
+const modelos=[
+ /* ITG 1000 Anexo 9 - DRE sugerida para Microentidade */
+ ["Receita Bruta","(-) Tributos sobre a Receita Bruta","(-) Devoluções e Vendas Canceladas","(-) Descontos Incondicionais","(-) Juros de AVP",
+  "T:Receita Líquida de Vendas",
+  "G:(-) Custos","Custos dos Produtos Vendidos","Custo das Mercadorias Vendidas","Custos dos Serviços Prestados",
+  "T:Resultado Bruto do Período",
+  "G:Despesas Operacionais","Despesas com Vendas","Despesas Administrativas","Outras Receitas/Despesas Operacionais","Resultado de Equivalência Patrimonial",
+  "T:Resultado antes das Receitas e Despesas Financeiras",
+  "G:Resultado Financeiro","Receitas Financeiras","Despesas Financeiras",
+  "T:Lucro (Prejuízo) Líquido do Período"],
+ /* NBC TG 1001 - Pequenas Empresas, item 5.1 */
+ ["Receitas",
+  "Custo dos Produtos, das Mercadorias ou dos Serviços Vendidos",
+  "T:Resultado Bruto",
+  "Despesas com Vendas","Despesas Administrativas","Outras Despesas e Receitas Operacionais",
+  "Receita ou Despesa de Equivalência Patrimonial",
+  "T:Resultado antes das Receitas e Despesas Financeiras",
+  "Receitas Financeiras","Despesas Financeiras",
+  "T:Resultado antes dos Tributos sobre o Lucro",
+  "Despesas com Imposto de Renda e Contribuição Social",
+  "T:Lucro ou Prejuízo do Exercício"],
+ /* NBC TG 1002 - Microentidades, item 5.1 */
+ ["Receita Bruta","Deduções à Receita Bruta",
+  "T:Receita Líquida",
+  "Custo dos Produtos, das Mercadorias Vendidas ou dos Serviços Prestados",
+  "T:Resultado (Lucro ou Prejuízo) Bruto",
+  "Despesas com Vendas","Despesas Administrativas","Outras Despesas e Receitas Operacionais",
+  "T:Resultado antes das Receitas e Despesas Financeiras",
+  "Receitas Financeiras","Despesas Financeiras",
+  "T:Resultado antes dos Tributos sobre o Lucro",
+  "Tributos sobre o Lucro",
+  "T:Resultado Líquido do Exercício"],
+ /* CPC 51 - categorias (item 47), subtotais (item 69) e rubricas mínimas (item 75) */
+ ["G:Categoria Operacional","Receitas","Receitas de Juros pelo Método de Juros Efetivos","Despesas Operacionais","Perdas por Redução ao Valor Recuperável (CPC 48)",
+  "T:Lucro ou Prejuízo Operacional",
+  "G:Categoria de Investimento","Parcela de Lucro ou Prejuízo de Investimentos por Equivalência Patrimonial","Outras Receitas e Despesas de Investimentos",
+  "T:Lucro ou Prejuízo antes de Financiamento e Tributos sobre o Lucro",
+  "G:Categoria de Financiamento","Receitas e Despesas de Financiamento",
+  "T:Lucro ou Prejuízo antes dos Tributos sobre o Lucro",
+  "G:Categoria de Tributos sobre o Lucro","Despesa ou Receita de Tributos sobre o Lucro",
+  "T:Lucro ou Prejuízo das Operações Continuadas",
+  "G:Categoria de Operações Descontinuadas","Total de Operações Descontinuadas (CPC 31)",
+  "T:Lucro ou Prejuízo Líquido"]
+];
+function montaItens(m){
+ return modelos[m].map(l=>l.startsWith('G:')?{d:l.slice(2),neg:1}
+  :l.startsWith('T:')?{d:l.slice(2),neg:1,t:1,v:1}
+  :{d:l,e:"Saldo Final",v:1,contas:[]});
+}
+let itens=montaItens(0);
+let sel=1;
+function trocaModelo(m){editando=false;backupContas=null;contaSel=-1;itens=vinculaPadrao(m,montaItens(m));sel=itens.findIndex(i=>!i.neg);render();msg('Modelo carregado: '+document.getElementById('modelo').options[m].text)}
+/* Colunas de período: inicia com 2 (ano atual e anterior), máximo 4, mínimo 1; quantidade lembrada no navegador.
+   Cada coluna: {t:'A'|'S'|'T'|'M'|'L', y, n, ini, fim}  (L = período livre; ini/fim como Date) */
+const ANO_ATUAL=2026,MAX_COL=4,MESES=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const PER={A:{q:1,m:12},S:{q:2,m:6},T:{q:4,m:3},M:{q:12,m:1}};
+function mkCol(t,y,n){const m=PER[t].m,ini=new Date(y,(n-1)*m,1),fim=new Date(y,n*m,0);return{t,y,n,ini,fim}}
+let cols=[mkCol('A',ANO_ATUAL,1),mkCol('A',ANO_ATUAL-1,1)],colNova=-1,pop=null;
+try{const q=+localStorage.getItem('dreQtdCol');if(q>=1&&q<=MAX_COL)cols=Array.from({length:q},(_,i)=>mkCol('A',ANO_ATUAL-i,1))}catch(e){}
+function guardaQtd(){try{localStorage.setItem('dreQtdCol',cols.length)}catch(e){}}
+const dd=d=>d.toLocaleDateString('pt-BR');
+const yy=y=>String(y).slice(2);
+function rotulo(c){
+ if(c.t==='A')return String(c.y);
+ if(c.t==='S')return c.n+'º Sem/'+yy(c.y);
+ if(c.t==='T')return c.n+'º Tri/'+yy(c.y);
+ if(c.t==='M')return MESES[c.n-1]+'/'+yy(c.y);
+ return dd(c.ini).slice(0,5)+'–'+dd(c.fim).slice(0,6)+yy(c.fim.getFullYear());
+}
+function mesmo(a,b){return +a.ini===+b.ini&&+a.fim===+b.fim}
+/* Detecta se as datas correspondem a um período da periodicidade da lista; senão, período livre */
+function tipoLista(){const el=document.getElementById('periodicidade');return el?el.value:'A'}
+function detecta(ini,fim){
+ for(const t of [tipoLista()]){const m=PER[t].m;
+  if(ini.getDate()===1&&ini.getMonth()%m===0&&ini.getFullYear()===fim.getFullYear()){const c=mkCol(t,ini.getFullYear(),ini.getMonth()/m+1);if(+c.fim===+fim)return c}}
+ return{t:'L',y:ini.getFullYear(),n:1,ini,fim};
+}
+/* Coluna nova herda o tipo da última e recua uma unidade */
+function recua(c){
+ if(c.t==='L'){const i=new Date(c.ini),f=new Date(c.fim);i.setFullYear(i.getFullYear()-1);f.setFullYear(f.getFullYear()-1);return{t:'L',y:i.getFullYear(),n:1,ini:i,fim:f}}
+ return c.n>1?mkCol(c.t,c.y,c.n-1):mkCol(c.t,c.y-1,PER[c.t].q);
+}
+function addColuna(){if(cols.length>=MAX_COL)return;let c=recua(cols[cols.length-1]);while(cols.some(x=>mesmo(x,c)))c=recua(c);cols.push(c);colNova=cols.length-1;guardaQtd();fechaPop();render();msg('Coluna '+rotulo(c)+' incluída.')}
+function remColuna(i){if(i===0)return;const c=cols.splice(i,1)[0];guardaQtd();fechaPop();render();msg('Coluna '+rotulo(c)+' removida.')}
+/* Lista de periodicidade x colunas:
+   - Ao escolher na lista, todas as colunas passam para esse tipo: a 1ª fica no período corrente do seu ano
+     (ou no último período, se o ano não for o atual) e as demais recuam uma unidade cada.
+   - A periodicidade é definida somente pela lista; o cabeçalho da coluna altera apenas o período (e o título). */
+function trocaPeriodicidade(t){
+ const y=cols[0].ini.getFullYear(),hoje=new Date(),q=PER[t].q;
+ const n=y===hoje.getFullYear()?Math.floor(hoje.getMonth()/PER[t].m)+1:q;
+ const novas=[mkCol(t,y,n)];while(novas.length<cols.length)novas.push(recua(novas[novas.length-1]));
+ cols=novas;colNova=-1;fechaPop();render();msg('Colunas ajustadas para periodicidade '+{A:'Anual',S:'Semestral',T:'Trimestral',M:'Mensal'}[t]+'.');
+}
+/* Barra de colunas (acima da grade): por coluna visível, lista do período (conforme a periodicidade) e campo do título */
+function codPer(t,y,n){return t==='A'?String(y):String(n*PER[t].m).padStart(2,'0')+'/'+y}
+function renderBarCols(){
+ const t=tipoLista();
+ document.getElementById('barCols').innerHTML=cols.map((c,i)=>{
+  let o=c.t==='L'?'<option value="L" selected>Livre</option>':'';
+  for(let y=ANO_ATUAL+1;y>=ANO_ATUAL-5;y--)for(let n=PER[t].q;n>=1;n--)o+=`<option value="${y}|${n}"${c.t===t&&c.y===y&&c.n===n?' selected':''}>${codPer(t,y,n)}</option>`;
+  return `<label class="${i===colNova?'novo':''}">${i+1}ª Coluna <select onchange="barPeriodo(${i},this.value)">${o}</select> <input class="desc" value="${(c.tit||rotulo(c)).replace(/"/g,'&quot;')}" maxlength="30" title="Título da coluna" oninput="barTituloVivo(${i},this.value)" onchange="barTitulo(${i},this.value)"></label>`;
+ }).join('');
+}
+function barPeriodo(i,v){
+ if(v==='L')return;const [y,n]=v.split('|').map(Number),c=mkCol(tipoLista(),y,n);
+ if(cols.some((x,k)=>k!==i&&mesmo(x,c))){alert('Já existe uma coluna com este período.');renderBarCols();return}
+ c.tit='';cols[i]=c;render();msg('Coluna '+(i+1)+': '+dd(c.ini)+' a '+dd(c.fim)+'.');
+}
+/* O cabeçalho da coluna acompanha, em tempo real, o texto digitado no 2º campo da barra */
+function barTituloVivo(i,v){const e=document.querySelectorAll('#cabAnos th.ano .per')[i];if(e)e.textContent=(v.trim()||rotulo(cols[i]))+' ▾'}
+function barTitulo(i,v){v=v.trim();cols[i].tit=v===rotulo(cols[i])?'':v;render()}
+function renderCab(){
+ renderBarCols();
+ document.getElementById('cabAnos').innerHTML='<th class="desc">Descrição</th>'+cols.map((c,i)=>`<th class="ano${i===colNova?' novo':''}${pop&&pop.i===i?' aberto':''}" title="${dd(c.ini)} a ${dd(c.fim)} — clique para alterar o período">${i?`<span class="rm" title="Remover coluna" onclick="event.stopPropagation();remColuna(${i})">×</span>`:''}<span class="per" onclick="abrePop(event,${i})">${c.tit||rotulo(c)} ▾</span></th>`).join('')+'<th class="add">'+(cols.length>1?'<button title="Remover última coluna" onclick="remColuna(cols.length-1)">−</button>':'')+(cols.length<MAX_COL?'<button title="Adicionar coluna ('+cols.length+' de '+MAX_COL+')" onclick="addColuna()">+</button>':'')+'</th>';
+}
+/* ---- Popover de período ---- */
+function abrePop(e,i){
+ e.stopPropagation();if(pop&&pop.i===i){fechaPop();return}
+ const th=e.currentTarget.closest('th');const c=cols[i];pop={i,t:c.t==='L'?tipoLista():c.t,y:c.y,n:c.n,ini:dd(c.ini),fim:dd(c.fim),tit:c.tit||'',livre:c.t==='L'};
+ const r=th.getBoundingClientRect();renderCab();renderPop();
+ const p=document.getElementById('popPer');p.style.display='block';p.style.top=(r.bottom+2)+'px';
+ p.style.left=Math.max(4,Math.min(r.right-p.offsetWidth,innerWidth-p.offsetWidth-8))+'px';
+ document.getElementById('ppIni').focus();
+}
+function fechaPop(){if(!pop)return;pop=null;document.getElementById('popPer').style.display='none';renderCab()}
+function popAno(d){pop.y+=d;aplicaAtalho()}
+function popN(n){pop.n=n;aplicaAtalho()}
+function aplicaAtalho(){pop.livre=false;const c=mkCol(pop.t,pop.y,pop.n);pop.ini=dd(c.ini);pop.fim=dd(c.fim);
+ document.getElementById('ppIni').value=pop.ini;document.getElementById('ppFim').value=pop.fim;renderPop(true)}
+function popDigita(){const a=parseD(ppIni.value),b=parseD(ppFim.value);
+ if(a&&b){const c=detecta(a,b);pop.livre=c.t==='L';if(!pop.livre){pop.y=c.y;pop.n=c.n}}else pop.livre=true;renderPop(true)}
+function parseD(s){const m=/^(\d{2})\/(\d{2})\/(\d{4})$/.exec(s);if(!m)return null;const d=new Date(+m[3],m[2]-1,+m[1]);return d.getDate()===+m[1]&&d.getMonth()===m[2]-1?d:null}
+function mascara(el){let v=el.value.replace(/\D/g,'').slice(0,8);if(v.length>4)v=v.slice(0,2)+'/'+v.slice(2,4)+'/'+v.slice(4);else if(v.length>2)v=v.slice(0,2)+'/'+v.slice(2);el.value=v}
+function renderPop(soAtalhos){
+ const nl=n=>pop.livre?false:pop.n===n;
+ let sub='';
+ if(pop.t==='S'||pop.t==='T')sub=Array.from({length:PER[pop.t].q},(_,k)=>`<button class="${nl(k+1)?'on':''}" onclick="popN(${k+1})">${k+1}º Tri</button>`).join('');
+ if(pop.t==='M')sub=MESES.map((m,k)=>`<button class="${nl(k+1)?'on':''}" onclick="popN(${k+1})">${m}</button>`).join('');
+ const atalhos=`<div class="pp-sub"><span class="pp-ano"><button onclick="popAno(-1)" title="Ano anterior">◂</button><b>${pop.y}</b><button onclick="popAno(1)" title="Próximo ano">▸</button></span><span class="pp-ns${pop.t==='M'?' mes':''}">${sub}</span></div>${pop.livre?'<div class="pp-livre">Período livre (datas informadas manualmente)</div>':''}`;
+ const p=document.getElementById('popPer');
+ if(soAtalhos){p.querySelector('.pp-atalhos').innerHTML=atalhos;document.getElementById('ppErro').textContent='';return}
+ p.innerHTML=`<div class="pp-tit">Período da coluna ${pop.i+1}</div><div class="pp-atalhos">${atalhos}</div>
+ <div class="pp-datas">Início <input id="ppIni" value="${pop.ini}" maxlength="10" oninput="mascara(this);popDigita()"> Fim <input id="ppFim" value="${pop.fim}" maxlength="10" oninput="mascara(this);popDigita()"></div>
+ <div class="pp-datas">Título do Campo <input id="ppTit" value="${pop.tit.replace(/"/g,'&quot;')}" maxlength="30" style="width:178px" placeholder="${rotulo(mkCol(pop.t,pop.y,pop.n))}"></div>
+ <div id="ppErro" class="pp-erro"></div>
+ <div class="pp-btns"><button class="fd-btn pri" onclick="confirmaPop()">Confirmar</button><button class="fd-btn" onclick="fechaPop()">Cancelar</button></div>`;
+}
+function confirmaPop(){
+ const a=parseD(ppIni.value),b=parseD(ppFim.value),er=document.getElementById('ppErro');
+ if(!a||!b){er.textContent='Informe as datas no formato dd/mm/aaaa.';return}
+ if(b<a){er.textContent='A data fim não pode ser anterior à data início.';return}
+ const c=detecta(a,b);
+ if(cols.some((x,k)=>k!==pop.i&&mesmo(x,c))){er.textContent='Já existe uma coluna com este período.';return}
+ const i=pop.i;c.tit=document.getElementById('ppTit').value.trim();cols[i]=c;fechaPop();render();msg('Coluna '+(i+1)+': '+dd(c.ini)+' a '+dd(c.fim)+'.');
+}
+document.addEventListener('keydown',e=>{if(!pop)return;if(e.key==='Escape')fechaPop();else if(e.key==='Enter'&&e.target.closest('#popPer'))confirmaPop()});
+document.addEventListener('mousedown',e=>{if(pop&&!e.target.closest('#popPer')&&!e.target.closest('th.ano .per'))fechaPop()});
+const f=x=>x.toLocaleString('pt-BR',{minimumFractionDigits:2});
+function render(){
+ renderCab();
+ const tb=document.getElementById('itens');tb.innerHTML='';
+ const VAL=valoresDRE(itens,cols.map(c=>[c.ini,c.fim]));
+ itens.forEach((it,i)=>{
+  const tr=document.createElement('tr');
+  tr.className=(it.neg?'neg ':'')+(it.t?'t ':'')+(i===sel?'sel':'');
+  const vals=cols.map((_,k)=>`<td class="n${k===colNova?' novo':''}">${VAL[i]?fv(VAL[i][k]):''}</td>`).join('')+'<td></td>';
+  tr.innerHTML=`<td>${it.d}</td>${vals}`;
+  tr.onclick=()=>{if(i===sel)return;if(editando&&!confirm('Há alterações não salvas nas contas contábeis. Descartar?'))return;if(editando)cancelaContas();sel=i;contaSel=-1;render()};
+  tb.appendChild(tr);
+ });
+ colNova=-1;
+ document.getElementById('tituloContas').textContent='Contas Contábeis';
+ renderContas();
+}
+/* Itens em negrito (grupos e totalizadores) não aceitam contas contábeis */
+let contaSel=-1,editando=false,backupContas=null;
+function aceitaContas(){return !itens[sel].neg}
+function habilita(id,on){document.getElementById(id).disabled=!on}
+function atualizaBotoesContas(){
+ const ok=aceitaContas(),c=itens[sel].contas||[];
+ habilita('cNovo',ok);
+ habilita('cSalvar',ok&&editando);
+ habilita('cCancelar',ok&&editando);
+ habilita('cExcluir',ok&&contaSel>=0&&contaSel<c.length);
+ habilita('cImprimir',ok&&c.length>0);
+ habilita('cExportar',ok&&c.length>0);
+ habilita('cAtualizar',ok);
+}
+function renderContas(){
+ const tb=document.getElementById('contas');
+ if(!aceitaContas()){
+  contaSel=-1;editando=false;
+  tb.innerHTML=`<tr><td style="color:#888;font-style:italic">Item totalizador ou de grupo não permite vincular contas contábeis.</td></tr>`;
+  atualizaBotoesContas();return;
+ }
+ const c=itens[sel].contas||(itens[sel].contas=[]);
+ tb.innerHTML=c.map((x,i)=>`<tr class="${i===contaSel?'sel':''}" onclick="contaSel=${i};renderContas()"><td><div class="sel-conta"><input readonly value="${x}" placeholder="Selecione a conta contábil"><button title="Plano de contas" onclick="event.stopPropagation();contaSel=${i};abrePlano(${i})">...</button></div></td></tr>`).join('');
+ atualizaBotoesContas();
+}
+function iniciaEdicao(){if(!editando){backupContas=[...itens[sel].contas];editando=true}}
+function novaConta(){
+ if(!aceitaContas())return;
+ iniciaEdicao();itens[sel].contas.push('');contaSel=itens[sel].contas.length-1;renderContas();
+ msg('Nova linha incluída. Clique em "..." para escolher a conta.');
+}
+function excluiConta(){
+ const c=itens[sel].contas;if(contaSel<0||contaSel>=c.length)return;
+ if(!confirm('Excluir a conta "'+(c[contaSel]||'(em branco)')+'"?'))return;
+ iniciaEdicao();c.splice(contaSel,1);contaSel=Math.min(contaSel,c.length-1);renderContas();
+}
+function salvaContas(){
+ /* Linhas em branco (como a criada automaticamente) são descartadas ao salvar */
+ itens[sel].contas=itens[sel].contas.filter(x=>x);contaSel=-1;
+ editando=false;backupContas=null;renderContas();msg('Contas contábeis salvas (simulado).');
+}
+function cancelaContas(){
+ if(backupContas)itens[sel].contas=backupContas;
+ editando=false;backupContas=null;contaSel=-1;renderContas();msg('Alterações canceladas.');
+}
+
+/* ---- Plano de contas fictício ---- */
+const planoDef=[
+ ['1','ATIVO'],['1.1','ATIVO CIRCULANTE'],['1.1.1','Caixa e Equivalentes de Caixa'],['1.1.1.01','Caixa'],['1.1.1.01.001','Caixa Geral'],
+ ['1.1.1.02','Bancos Conta Movimento'],['1.1.1.02.001','Banco do Brasil'],['1.1.1.02.002','Bradesco'],['1.1.1.02.003','Banco Itaú'],['1.1.1.02.004','Caixa Econômica Federal'],
+ ['1.1.1.03','Aplicações Financeiras'],['1.1.1.03.001','Banco do Brasil'],['1.1.1.03.002','Bradesco'],
+ ['1.1.2','Contas a Receber'],['1.1.2.01','Clientes'],['1.1.2.01.001','Clientes Diversos'],['1.1.2.02','(-) Perdas Estimadas com Créditos de Liquidação Duvidosa'],['1.1.2.02.001','Provisão para Devedores Duvidosos'],
+ ['1.1.3','Estoques'],['1.1.3.01','Mercadorias para Revenda'],['1.1.3.01.001','Estoque Inicial'],
+ ['1.2','ATIVO NÃO CIRCULANTE'],['1.2.1','Investimentos'],['1.2.1.01','Participações Societárias'],['1.2.1.01.001','Equivalência Patrimonial'],
+ ['1.2.2','Imobilizado'],['1.2.2.01','Bens em Operação'],['1.2.2.01.001','Máquinas e Equipamentos'],['1.2.2.01.002','Veículos'],['1.2.2.01.003','Móveis e Utensílios'],
+ ['1.2.2.02','(-) Depreciação Acumulada'],['1.2.2.02.001','Depreciação de Máquinas e Equipamentos'],
+ ['2','PASSIVO E PATRIMÔNIO LÍQUIDO'],['2.1','PASSIVO CIRCULANTE'],['2.1.1','Fornecedores'],['2.1.1.01','Fornecedores Nacionais'],['2.1.1.01.001','Fornecedores Diversos'],
+ ['2.1.2','Obrigações Trabalhistas'],['2.1.2.01','Salários a Pagar'],['2.1.2.01.001','Salários e Ordenados'],['2.1.2.02','Encargos Sociais'],['2.1.2.02.001','INSS a Recolher'],['2.1.2.02.002','FGTS a Recolher'],
+ ['2.1.3','Obrigações Tributárias'],['2.1.3.01','Impostos a Recolher'],['2.1.3.01.001','ICMS a Recolher'],['2.1.3.01.002','PIS a Recolher'],['2.1.3.01.003','COFINS a Recolher'],
+ ['2.2','PASSIVO NÃO CIRCULANTE'],['2.2.1','Empréstimos e Financiamentos'],['2.2.1.01','Financiamentos Bancários'],['2.2.1.01.001','Financiamento BNDES'],
+ ['2.3','PATRIMÔNIO LÍQUIDO'],['2.3.1','Capital Social'],['2.3.1.01','Capital Subscrito'],['2.3.1.01.001','Capital Social Integralizado'],
+ ['2.3.2','Reservas de Lucros'],['2.3.2.01','Reserva Legal'],['2.3.2.01.001','Reserva Legal'],
+ ['2.3.3','Ajustes de Avaliação Patrimonial'],['2.3.3.01','Outros Resultados Abrangentes'],['2.3.3.01.001','Variações Cambiais'],['2.3.3.01.002','Ajustes Instrumentos Financeiros'],['2.3.3.01.003','Ajuste de Reorganização Societária'],
+ ['2.3.4','Lucros ou Prejuízos Acumulados'],['2.3.4.01','Resultado do Exercício'],['2.3.4.01.001','Lucros ou Prejuízos Acumulados'],
+ ['3','RECEITA'],['3.1','RECEITA OPERACIONAL'],
+ ['3.1.1','Receita Bruta'],['3.1.1.01','Vendas de Mercadorias'],['3.1.1.01.001','Vendas no Mercado Interno',180000],['3.1.1.01.002','Vendas no Mercado Externo',40000],
+ ['3.1.1.02','Vendas de Produtos'],['3.1.1.02.001','Venda de Produtos Fabricados',90000],
+ ['3.1.1.03','Prestação de Serviços'],['3.1.1.03.001','Receita de Serviços',60000],
+ ['3.1.2','(-) Deduções da Receita Bruta'],['3.1.2.01','Tributos sobre Vendas'],['3.1.2.01.001','ICMS sobre Vendas',-30000],['3.1.2.01.002','PIS sobre Faturamento',-5000],['3.1.2.01.003','COFINS sobre Faturamento',-22000],['3.1.2.01.004','ISS sobre Serviços',-3000],
+ ['3.1.2.02','Devoluções e Cancelamentos'],['3.1.2.02.001','Devoluções de Vendas',-6000],['3.1.2.02.002','Vendas Canceladas',-2000],
+ ['3.1.2.03','Descontos Concedidos'],['3.1.2.03.001','Descontos Incondicionais Concedidos',-4000],
+ ['3.1.2.04','Ajuste a Valor Presente'],['3.1.2.04.001','Juros de AVP sobre Vendas',-1500],
+ ['3.2','RECEITAS FINANCEIRAS'],['3.2.1','Receitas Financeiras'],['3.2.1.01','Rendimentos de Aplicações'],['3.2.1.01.001','Juros Ativos',2500],['3.2.1.01.002','Rendimento de Aplicações Financeiras',3500],
+ ['3.2.1.02','Juros pelo Método de Juros Efetivos'],['3.2.1.02.001','Juros Efetivos sobre Recebíveis',1800],
+ ['3.2.1.03','Variações Cambiais Ativas'],['3.2.1.03.001','Variação Cambial Ativa',700],
+ ['4','DESPESA'],['4.1','CUSTOS'],
+ ['4.1.1','Custo das Mercadorias Vendidas'],['4.1.1.01','CMV'],['4.1.1.01.001','Custo das Mercadorias Vendidas',-110000],
+ ['4.1.2','Custo dos Produtos Vendidos'],['4.1.2.01','CPV'],['4.1.2.01.001','Matéria-Prima Consumida',-35000],['4.1.2.01.002','Mão de Obra Direta',-15000],
+ ['4.1.3','Custo dos Serviços Prestados'],['4.1.3.01','CSP'],['4.1.3.01.001','Mão de Obra Aplicada nos Serviços',-25000],
+ ['4.2','DESPESAS OPERACIONAIS'],
+ ['4.2.1','Despesas Administrativas'],['4.2.1.01','Despesas com Pessoal'],['4.2.1.01.001','Salários',-28000],['4.2.1.01.002','Pró-labore',-12000],
+ ['4.2.1.02','Despesas Gerais'],['4.2.1.02.001','Aluguéis',-8000],['4.2.1.02.002','Energia Elétrica',-2500],['4.2.1.02.003','Telefone e Internet',-1200],
+ ['4.2.2','Despesas Financeiras'],['4.2.2.01','Juros e Encargos'],['4.2.2.01.001','Juros Passivos',-4500],['4.2.2.01.002','Tarifas Bancárias',-800],['4.2.2.01.003','Variação Cambial Passiva',-600],
+ ['4.2.3','Despesas com Vendas'],['4.2.3.01','Despesas Comerciais'],['4.2.3.01.001','Comissões sobre Vendas',-9000],['4.2.3.01.002','Propaganda e Publicidade',-5000],['4.2.3.01.003','Fretes sobre Vendas',-3500],
+ ['4.2.4','Perdas por Redução ao Valor Recuperável'],['4.2.4.01','Perdas Estimadas'],['4.2.4.01.001','Perdas Estimadas com Créditos de Liquidação Duvidosa',-2200],
+ ['5','OUTROS'],['5.1','OUTRAS RECEITAS E DESPESAS OPERACIONAIS'],['5.1.1','Outras Receitas Operacionais'],['5.1.1.01','Ganhos Diversos'],['5.1.1.01.001','Ganho na Venda de Imobilizado',1500],['5.1.1.01.002','Recuperação de Despesas',800],
+ ['5.1.2','Outras Despesas Operacionais'],['5.1.2.01','Perdas Diversas'],['5.1.2.01.001','Perda na Baixa de Imobilizado',-900],
+ ['5.2','RESULTADO DE PARTICIPAÇÕES'],['5.2.1','Equivalência Patrimonial'],['5.2.1.01','Resultado de Equivalência'],['5.2.1.01.001','Resultado de Equivalência Patrimonial',4000],
+ ['5.2.2','Outros Resultados de Investimentos'],['5.2.2.01','Dividendos'],['5.2.2.01.001','Dividendos Recebidos',1200],
+ ['5.3','TRIBUTOS SOBRE O LUCRO'],['5.3.1','Imposto de Renda e Contribuição Social'],['5.3.1.01','Tributos Correntes'],['5.3.1.01.001','Imposto de Renda Pessoa Jurídica',-14000],['5.3.1.01.002','Contribuição Social sobre o Lucro Líquido',-5500],
+ ['5.4','OPERAÇÕES DESCONTINUADAS'],['5.4.1','Resultado de Operações Descontinuadas'],['5.4.1.01','Operações Descontinuadas (CPC 31)'],['5.4.1.01.001','Resultado Líquido de Operações Descontinuadas',-2500]
+];
+const plano=planoDef.map((p,i)=>({red:String(i+1).padStart(5,'0'),cod:p[0],desc:p[1],base:p[2]||0,analitica:!planoDef.some(q=>q[0].startsWith(p[0]+'.'))}));
+const planoCod={};plano.forEach(p=>planoCod[p.cod]=p);
+
+/* ---- Vinculação padrão (dados de teste): cada linha de detalhe de cada modelo recebe ao menos uma conta ----
+   Chave = descrição da linha; valor = contas sintéticas vinculadas. Ordem dos mapas = ordem da lista de modelos. */
+const vincPadrao=[
+ {/* ITG 1000 */
+  'Receita Bruta':['3.1.1'],'(-) Tributos sobre a Receita Bruta':['3.1.2.01'],'(-) Devoluções e Vendas Canceladas':['3.1.2.02'],
+  '(-) Descontos Incondicionais':['3.1.2.03'],'(-) Juros de AVP':['3.1.2.04'],
+  'Custos dos Produtos Vendidos':['4.1.2'],'Custo das Mercadorias Vendidas':['4.1.1'],'Custos dos Serviços Prestados':['4.1.3'],
+  'Despesas com Vendas':['4.2.3'],'Despesas Administrativas':['4.2.1'],'Outras Receitas/Despesas Operacionais':['5.1','4.2.4'],
+  'Resultado de Equivalência Patrimonial':['5.2'],'Receitas Financeiras':['3.2'],'Despesas Financeiras':['4.2.2']},
+ {/* NBC TG 1001 */
+  'Receitas':['3.1'],'Custo dos Produtos, das Mercadorias ou dos Serviços Vendidos':['4.1'],
+  'Despesas com Vendas':['4.2.3'],'Despesas Administrativas':['4.2.1'],'Outras Despesas e Receitas Operacionais':['5.1','4.2.4'],
+  'Receita ou Despesa de Equivalência Patrimonial':['5.2'],'Receitas Financeiras':['3.2'],'Despesas Financeiras':['4.2.2'],
+  'Despesas com Imposto de Renda e Contribuição Social':['5.3'],'Lucro ou Prejuízo do Exercício':[]},
+ {/* NBC TG 1002 */
+  'Receita Bruta':['3.1.1'],'Deduções à Receita Bruta':['3.1.2'],'Custo dos Produtos, das Mercadorias Vendidas ou dos Serviços Prestados':['4.1'],
+  'Despesas com Vendas':['4.2.3'],'Despesas Administrativas':['4.2.1'],'Outras Despesas e Receitas Operacionais':['5.1','5.2','4.2.4'],
+  'Receitas Financeiras':['3.2'],'Despesas Financeiras':['4.2.2'],'Tributos sobre o Lucro':['5.3']},
+ {/* CPC 51 */
+  'Receitas':['3.1'],'Receitas de Juros pelo Método de Juros Efetivos':['3.2.1.02'],'Despesas Operacionais':['4.1','4.2.1','4.2.3','5.1'],
+  'Perdas por Redução ao Valor Recuperável (CPC 48)':['4.2.4'],
+  'Parcela de Lucro ou Prejuízo de Investimentos por Equivalência Patrimonial':['5.2.1'],'Outras Receitas e Despesas de Investimentos':['5.2.2','3.2.1.01'],
+  'Receitas e Despesas de Financiamento':['4.2.2','3.2.1.03'],'Despesa ou Receita de Tributos sobre o Lucro':['5.3'],
+  'Total de Operações Descontinuadas (CPC 31)':['5.4']}
+];
+function vinculaPadrao(m,lista){
+ const mapa=vincPadrao[m]||{};
+ lista.forEach(it=>{if(it.neg)return;const pr=mapa[it.d]||[];
+  it.contas=pr.map(x=>planoCod[x]).filter(Boolean).map(p=>`${p.cod} - ${p.desc}`);
+  if(!it.contas.length)console.warn('Linha sem conta vinculada:',it.d)});
+ return lista;
+}
+vinculaPadrao(0,itens);
+
+/* ---- Saldos fictícios: saldo-base mensal x sazonalidade x crescimento de 7% a.a. x variação determinística.
+   Meses posteriores à data de hoje ficam zerados. Receitas positivas; deduções, custos e despesas negativos. */
+const SAZ=[0.92,0.88,1.0,0.97,1.02,0.98,1.01,1.04,0.99,1.03,1.07,1.15],HOJE=new Date();
+function hashv(t){let h=7;for(const ch of t)h=(h*31+ch.charCodeAt(0))%9973;return h}
+function saldoMes(p,y,m){
+ if(!p.base||new Date(y,m,1)>HOJE)return 0;
+ return Math.round(p.base*(1+0.07*(y-2026))*SAZ[m]*(0.9+(hashv(p.cod+'|'+y+'|'+m)%21)/100)*100)/100;
+}
+function saldoConta(p,ini,fim){
+ let t=0;
+ for(let d=new Date(ini.getFullYear(),ini.getMonth(),1);d<=fim;d=new Date(d.getFullYear(),d.getMonth()+1,1)){
+  const y=d.getFullYear(),m=d.getMonth(),dm=new Date(y,m+1,0).getDate();
+  const a=(y===ini.getFullYear()&&m===ini.getMonth())?ini.getDate():1,b=(y===fim.getFullYear()&&m===fim.getMonth())?fim.getDate():dm;
+  t+=saldoMes(p,y,m)*(b-a+1)/dm;
+ }
+ return Math.round(t*100)/100;
+}
+/* Saldo de conta sintética = soma das contas analíticas abaixo dela */
+function saldoSint(p,ini,fim){return p.analitica?saldoConta(p,ini,fim):plano.filter(q=>q.analitica&&q.cod.startsWith(p.cod+'.')).reduce((s,q)=>s+saldoConta(q,ini,fim),0)}
+function valorItem(it,ini,fim){return (it.contas||[]).reduce((s,x)=>{const p=planoCod[x.split(' - ')[0]];return s+(p?saldoSint(p,ini,fim):0)},0)}
+/* Valores da DRE: detalhe = soma das contas; totalizador = acumulado de todos os detalhes acima; grupo = sem valor */
+function valoresDRE(lista,periodos){
+ const acc=periodos.map(()=>0);
+ return lista.map(it=>{
+  if(it.t)return acc.slice();
+  if(it.neg)return null;
+  const v=periodos.map(([a,b])=>valorItem(it,a,b));v.forEach((x,k)=>acc[k]+=x);return v;
+ });
+}
+const fv=x=>Math.abs(x)<0.005?'0,00':x<0?'('+f(-x)+')':f(x);
+let planoSel=0,planoLinha=-1,campoBusca='red',planoFiltrado=plano;
+const rotulos={red:'Reduzido',cod:'Código',desc:'Descrição'};
+function abrePlano(i){planoLinha=i;planoSel=0;document.getElementById('busca').value='';filtraPlano();document.getElementById('modalPlano').style.display='flex';document.getElementById('busca').focus()}
+function fechaPlano(){document.getElementById('modalPlano').style.display='none'}
+function setBusca(c){campoBusca=c;document.getElementById('buscaRotulo').textContent='Buscando em "'+rotulos[c]+'"';filtraPlano();document.getElementById('busca').focus()}
+function filtraPlano(){
+ const t=document.getElementById('busca').value.toLowerCase();
+ /* Apenas contas de resultado (3 - Receita, 4 - Despesa e 5 - Outros) e sintéticas (com contas filhas), exceto o grupo raiz */
+ planoFiltrado=plano.filter(p=>/^[345]\./.test(p.cod)&&!p.analitica&&p[campoBusca].toLowerCase().includes(t));planoSel=0;renderPlano();
+}
+function renderPlano(){
+ document.getElementById('plano').innerHTML=planoFiltrado.map((p,i)=>`<tr class="${i===planoSel?'sel':''}" onclick="planoSel=${i};renderPlano()" ondblclick="planoSel=${i};confirmaConta()"><td>${p.red}</td><td>${p.cod}</td><td>${p.desc}</td></tr>`).join('');
+}
+function teclaPlano(e){
+ if(e.key==='ArrowDown'){planoSel=Math.min(planoSel+1,planoFiltrado.length-1);renderPlano();e.preventDefault()}
+ else if(e.key==='ArrowUp'){planoSel=Math.max(planoSel-1,0);renderPlano();e.preventDefault()}
+ else if(e.key==='Enter')confirmaConta();
+ else if(e.key==='Escape')fechaPlano();
+}
+function confirmaConta(){
+ const p=planoFiltrado[planoSel];if(!p)return;
+ const c=itens[sel].contas,valor=`${p.cod} - ${p.desc}`;
+ if(c.some((x,i)=>x===valor&&i!==planoLinha)){alert('A conta '+p.cod+' já está vinculada a este item.');return}
+ /* Evita contar o mesmo saldo duas vezes: não permite vincular conta superior ou inferior a outra já vinculada no item */
+ const conf=c.find((x,i)=>{if(i===planoLinha||!x)return false;const k=x.split(' - ')[0];return k.startsWith(p.cod+'.')||p.cod.startsWith(k+'.')});
+ if(conf){alert('A conta '+p.cod+' está na mesma hierarquia da conta '+conf.split(' - ')[0]+', já vinculada a este item.');return}
+ iniciaEdicao();c[planoLinha]=valor;
+ /* Ao preencher a última linha, cria automaticamente uma nova linha em branco logo abaixo */
+ if(planoLinha===c.length-1)c.push('');
+ contaSel=c.length-1;fechaPlano();renderContas();msg('Conta '+p.cod+' selecionada.');
+}
+/* ---- Modal Filtros Demonstração (Imprimir) ---- */
+const socios=[{cod:'10548077000186',nome:'Declarante Demonstração'},{cod:'12345678000190',nome:'Sócio Exemplo Ltda'},{cod:'98765432100',nome:'João da Silva'}];
+const mesesNome=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+let mesesOn=new Set(),sociosOn=new Set([0]);
+function abreImpressao(){
+ const mod=document.getElementById('modelo'),fm=document.getElementById('fdModelo');
+ fm.innerHTML='<option>DRE Padrão</option><option>DRE Comparativa</option>';fm.selectedIndex=1;modeloImp();
+ const ano=String(cols[0].ini.getFullYear());
+ const fa=document.getElementById('fdAno');fa.innerHTML='';for(let y=+ano-5;y<=+ano+5;y++)fa.add(new Option(y,y,y==ano,y==ano));
+ document.getElementById('fdIni').value='01/01/'+ano;
+ document.getElementById('fdFim').value='31/12/'+ano;
+ document.getElementById('fdEmi').value=new Date().toLocaleDateString('pt-BR');
+ mesesOn=new Set(mesesNome.map((_,i)=>i));renderMeses();renderSocios();
+ document.getElementById('modalImp').style.display='flex';
+}
+/* DRE Comparativa: exibe (somente leitura) os períodos das colunas selecionadas na tela da DRE, no lugar de meses/Ano/Período */
+function modeloImp(){
+ const comp=fdModelo.selectedIndex===1;
+ 
+ const el=document.getElementById('fdComp');el.style.display='none';/* etiquetas de períodos não são exibidas */
+ if(comp)el.innerHTML='Períodos da DRE:'+cols.map((c,i)=>`<span class="pc" title="${dd(c.ini)} a ${dd(c.fim)}"><b>${i+1}ª</b> ${(c.tit||rotulo(c)).replace(/</g,'&lt;')} <span style="color:#777">(${dd(c.ini)} a ${dd(c.fim)})</span></span>`).join('');
+}
+function mudaAnoImp(){const y=fdAno.value;fdIni.value=fdIni.value.slice(0,6)+y;fdFim.value=fdFim.value.slice(0,6)+y}
+function fechaImpressao(){document.getElementById('modalImp').style.display='none'}
+function renderMeses(){
+ const todos=mesesOn.size===12;
+ document.getElementById('fdMeses').innerHTML=mesesNome.map((m,i)=>`<span class="${mesesOn.has(i)&&!todos?'on':''}" onclick="toggleMes(${i})">${m}</span>`).join('')+`<span class="todos ${todos?'on':''}" onclick="toggleMes(-1)">Todos</span>`;
+}
+function toggleMes(i){
+ if(i<0)mesesOn=new Set(mesesNome.map((_,k)=>k));
+ else if(mesesOn.size===12)mesesOn=new Set([i]);
+ else{mesesOn.has(i)?mesesOn.delete(i):mesesOn.add(i);if(!mesesOn.size)mesesOn=new Set(mesesNome.map((_,k)=>k))}
+ renderMeses();
+}
+function renderSocios(){
+ const t=document.getElementById('fdBusca').value.toLowerCase();
+ document.getElementById('fdSocios').innerHTML=socios.map((s,i)=>s.cod.toLowerCase().includes(t)?`<tr><td><input type="checkbox" ${sociosOn.has(i)?'checked':''} onclick="this.checked?sociosOn.add(${i}):sociosOn.delete(${i})"></td><td>${s.cod}</td><td>${s.nome}</td></tr>`:'').join('');
+}
+function marcaSocios(on){sociosOn=on?new Set(socios.map((_,i)=>i)):new Set();renderSocios()}
+function moeda(){
+ const on=document.getElementById('fdMoeda').checked,c=document.getElementById('fdMoedaCampos');
+ c.style.color=on?'#000':'#aaa';c.querySelectorAll('select').forEach(s=>s.disabled=!on);
+}
+function numReg(){
+ const on=document.getElementById('fdNumReg').checked,d=document.getElementById('fdDataReg');
+ d.disabled=!on;if(!on)d.checked=false;document.getElementById('fdDataRegLbl').className=on?'':'off';
+}
+function numPag(){
+ const on=document.getElementById('fdNumPag').checked;
+ document.querySelectorAll('#fdPag input,#fdPag select').forEach(e=>e.disabled=!on);
+ document.getElementById('fdPag').style.color=on?'#000':'#aaa';
+}
+/* ---- Emissão do relatório no formato do modelo ITG 1000 (Anexo 3): empresa/CNPJ, título com os exercícios,
+   uma coluna "De dd/mm/aaaa a dd/mm/aaaa" por coluna da tela, valores zerados como "-", local/data e assinaturas ---- */
+function abreRelatorio(){
+ const per=cols.map(c=>[c.ini,c.fim]);
+ const VAL=valoresDRE(itens,per),supr=fdZerados.checked;
+ const fz=x=>Math.abs(x)<0.005?'-':fv(x);
+ const anos=[...new Set(per.map(([x,y])=>y.getFullYear()))];
+ const exerc=anos.length===1?'do Exercício de '+anos[0]:'dos Exercícios de '+anos.slice(0,-1).join(', ')+' e '+anos[anos.length-1];
+ const linhas=itens.map((it,i)=>{
+  const v=VAL[i];
+  if(supr&&v&&!it.t&&v.every(x=>Math.abs(x)<0.005))return '';
+  /* Linhas de dedução "(-)" logo abaixo da Receita Bruta e itens financeiros ficam recuados, como no modelo */
+  const cls=it.t?'t':it.neg?'g':'d';
+  return `<tr class="${cls}"><td>${it.d}</td>${per.map((_,k)=>`<td class="n">${v?fz(v[k]):(it.neg?'':'')}</td>`).join('')}</tr>`;
+ }).join('');
+ const res=VAL[VAL.length-1]?VAL[VAL.length-1][0]:0;
+ const socs=socios.filter((_,i)=>sociosOn.has(i));
+ const em=parseD(fdEmi.value)||new Date();
+ const mesExt=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+ const fmtDoc=c=>c.length===14?c.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,'$1.$2.$3/$4-$5'):c.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/,'$1.$2.$3-$4');
+ const html=`<div class="rel-cab"><div class="rel-tit">DEMONSTRAÇÃO DO RESULTADO DO PERÍODO</div>${fdEmpresa.checked?'<div class="emp">Empresa Demonstração Ltda.</div><div>CNPJ 10.548.077/0001-86</div>':''}<div class="pg">${fdNumPag.checked?'Pág.: '+String(document.querySelector('#fdPag input').value).padStart(4,'0'):''}</div></div>
+  <table class="rel-dre">
+   <thead>
+    <tr><th class="emp" rowspan="2"><div class="sub" style="margin-top:0">Demonstração do Resultado ${exerc} (em R$)</div></th>
+     ${per.map(([x,y])=>`<th class="per">De ${dd(x)} a<br>${dd(y)}</th>`).join('')}</tr>
+   </thead>
+   <tbody>${linhas}</tbody>
+  </table>
+  ${fdTexto.checked?`<div class="concl">Reconhecemos a exatidão da presente Demonstração do Resultado, que apresenta ${res>=0?'lucro':'prejuízo'} líquido de R$ ${f(Math.abs(res))} no período de ${dd(per[0][0])} a ${dd(per[0][1])}.</div>`:''}
+  <div class="local">São Paulo, ${em.getDate()} de ${mesExt[em.getMonth()]} de ${em.getFullYear()}.</div>
+  <div class="ass">
+   ${fdContador.checked?`<div><span class="lin"></span>Contador Demonstração<br>Contador<br>CRC 1SP000000/O-0<br>Escritório Contábil Demonstração</div>`:''}
+   ${socs.map(s=>`<div><span class="lin"></span>${s.nome}<br>Administrador Geral da Sociedade<br>${s.cod.length===14?'CNPJ':'CPF'} ${fmtDoc(s.cod)}</div>`).join('')}
+  </div>
+`;
+ document.getElementById('relConteudo').innerHTML=html;
+ document.getElementById('modalRel').style.display='flex';zoomRel(0);
+ msg('Relatório emitido: '+per.map(([x,y])=>dd(x)+' a '+dd(y)).join(' · ')+'.');
+}
+function zoomRel(d){const sel=document.getElementById('relZoom');let z=parseInt(sel.value)+d;const ops=[...sel.options].map(o=>parseInt(o.text));if(d){z=d>0?(ops.find(x=>x>parseInt(sel.value))||ops[ops.length-1]):([...ops].reverse().find(x=>x<parseInt(sel.value))||ops[0]);sel.value=z+' %'}document.getElementById('relWrap').style.zoom=z/100;document.getElementById('relRH').style.zoom=z/100}
+function processaImpressao(){
+ if(fdModelo.selectedIndex===1){if(!sociosOn.size){alert('Selecione ao menos um sócio.');return}fechaImpressao();abreRelatorio();return}
+ const ok=/^\d{2}\/\d{2}\/\d{4}$/;
+ if(!ok.test(fdIni.value)||!ok.test(fdFim.value)){alert('Informe o período no formato dd/mm/aaaa.');return}
+ if(!sociosOn.size){alert('Selecione ao menos um sócio.');return}
+ const a=parseD(fdIni.value),b=parseD(fdFim.value);if(!a||!b){alert('Informe datas válidas no período.');return}if(b<a){alert('A data final do período não pode ser anterior à inicial.');return}
+ fechaImpressao();abreRelatorio(a,b);
+}
+function msg(t){document.getElementById('status').textContent=t}
+function novo(){const d=prompt('Descrição do novo item:');if(d){itens.splice(itens.length-1,0,{d,s:"+",e:"Saldo Final",v:1,contas:[]});sel=itens.length-2;render()}}
+function excluir(){if(itens[sel].neg){msg('Item de grupo não pode ser excluído.');return}if(confirm('Excluir "'+itens[sel].d+'"?')){itens.splice(sel,1);sel=Math.max(0,sel-1);render()}}
+/* ---- Sugerir Preenchimento: vincula contas sintéticas de resultado aos itens de detalhe da DRE ----
+   Para cada conta, as regras são testadas em ordem; a conta vai para o primeiro item que casar. */
+const regrasSugestao=[
+ {pref:'3.1.2.02',regras:[/devoluç/i,/dedu/i]},
+ {pref:'3.1.2.03',regras:[/descontos/i,/dedu/i]},
+ {pref:'3.1.2.04',regras:[/avp/i,/dedu/i]},
+ {pref:'3.2.1.02',regras:[/juros pelo método/i,/^receitas financeiras$/i]},
+ {pref:'4.1.2',regras:[/produtos vendidos/i,/^custo dos produtos/i,/^despesas operacionais$/i]},
+ {pref:'4.1.3',regras:[/serviços prestados/i,/^custo dos produtos/i,/^despesas operacionais$/i]},
+ {pref:'4.2.3',regras:[/^despesas com vendas$/i,/^despesas operacionais$/i]},
+ {pref:'4.2.4',regras:[/redução ao valor recuperável/i,/^outras (receitas|despesas)/i]},
+ {pref:'3.1.1',regras:[/^receita bruta$/i,/^receitas$/i,/^receita líquida de vendas e servi/i]},
+ {pref:'3.1.2.01',regras:[/tributos sobre a receita/i,/deduções à receita/i,/^\(-\) dedu/i]},
+ {pref:'3.2.1.01',regras:[/^receitas financeiras$/i,/outras receitas e despesas de investimentos/i]},
+ {pref:'3.2.1.03',regras:[/^receitas financeiras$/i,/despesas de financiamento/i]},
+ {pref:'4.1.1',regras:[/custo das mercadorias/i,/^custo/i,/^despesas operacionais$/i]},
+ {pref:'4.2.1',regras:[/^despesas administrativas$/i,/^despesas operacionais$/i]},
+ {pref:'4.2.2',regras:[/^despesas financeiras$/i,/despesas de financiamento/i]}
+];
+let jaSugeriu=false;
+function sugerirPreenchimento(){
+ if(editando){alert('Salve ou cancele as alterações das contas contábeis antes de sugerir o preenchimento.');return}
+ const temContas=itens.some(i=>i.contas&&i.contas.length);
+ if(jaSugeriu||temContas){
+  abreAviso('Confirmação',
+   'Já existem contas contábeis vinculadas à estrutura da DRE. Ao prosseguir, a vinculação será apagada e refeita. Deseja prosseguir?',
+   [{t:'Sim',pri:1,f:executaSugestao},{t:'Não'}]);
+ }else{
+  abreAviso('Associação automática das contas',
+   '<p>O NGContábil irá sugerir automaticamente a associação das contas contábeis à estrutura da DRE considerando critérios como grupo, natureza e descrição das contas.</p>'+
+   '<p>As contas do grupo <b>5 - Outros</b> não são consideradas na sugestão e devem ser vinculadas manualmente, se necessário.</p>'+
+   '<p>As associações geradas são sugestões e podem exigir ajustes. Por isso orientamos que revisem os resultados para confirmar se as contas contábeis foram associadas da forma correta antes de prosseguir.</p>',
+   [{t:'OK',pri:1,f:executaSugestao}]);
+ }
+}
+function abreAviso(titulo,html,botoes){
+ document.getElementById('avTit').textContent=titulo;
+ document.getElementById('avMsg').innerHTML=html;
+ const b=document.getElementById('avBtns');b.innerHTML='';
+ botoes.forEach(x=>{const e=document.createElement('button');e.className='fd-btn'+(x.pri?' pri':'');e.textContent=x.t;
+  e.onclick=()=>{fechaAviso();if(x.f)x.f()};b.appendChild(e)});
+ document.getElementById('modalAviso').style.display='flex';b.firstChild.focus();
+}
+function fechaAviso(){document.getElementById('modalAviso').style.display='none'}
+function executaSugestao(){
+ jaSugeriu=true;
+ const detalhes=itens.filter(i=>!i.neg);detalhes.forEach(i=>i.contas=[]);
+ let vinc=0,sem=[];
+ plano.filter(p=>/^[34]/.test(p.cod)&&p.analitica).forEach(p=>{
+  const r=regrasSugestao.find(x=>p.cod.startsWith(x.pref));let alvo=null;
+  if(r)for(const re of r.regras){alvo=detalhes.find(i=>re.test(i.d));if(alvo)break}
+  /* Vincula a conta sintética da regra (não a analítica); cada sintética entra uma única vez no item */
+  const sint=r&&planoCod[r.pref];
+  if(alvo&&sint){const v=`${sint.cod} - ${sint.desc}`;if(!alvo.contas.includes(v)){alvo.contas.push(v);vinc++}}
+  else{const k=p.cod.split('.').slice(0,3).join('.');if(!sem.includes(k))sem.push(k)}
+ });
+ contaSel=-1;render();
+ msg(`Sugestão concluída: ${vinc} conta(s) vinculada(s)`+(sem.length?`, ${sem.length} sem item correspondente (${sem.join(', ')})`:'')+'. Confira as informações.');
+}
+function processar(){msg('Processamento concluído (simulado).')}
+function abreMenu(e,id){e.stopPropagation();document.querySelectorAll('.menu').forEach(m=>m.style.display='none');const r=e.target.getBoundingClientRect(),m=document.getElementById(id);m.style.left=r.left+'px';m.style.top=r.bottom+'px';m.style.display='block'}
+document.onclick=()=>document.querySelectorAll('.menu').forEach(m=>m.style.display='none');
+render();
+</script>
+</body>
+</html>
